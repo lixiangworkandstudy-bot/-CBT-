@@ -1,0 +1,37 @@
+https://zhangzhenyao.com/vbot-docs/01-getting-started/index.html
+VBOT EDU 快速开始 · 网页版教程
+VBOT EDU · 网页版教程
+快速开始：从开箱到让机器狗迈出第一步
+三课打通「认识平台 → 网络接入 → /vel_cmd 20Hz 运控」的完整开发链路。面向人类开发者与 AI Coding Agent 双读者，所有示例均按固件 V1.6.0 实测口径编写。
+3 课 · 约 35 分钟
+固件基准 V1.6.0
+ROS 2 Humble + Aorta(Zenoh)
+课程目录
+Lesson 01
+走进 VBOT 大头 EDU
+产品全景、发布视频四幕拆解、核心规格总览，以及市面消费级 / 大头消费版 / 大头 EDU 的三方六维对比。
+概念讲解对比选型约 8 分钟
+开始学习 →
+Lesson 02
+极速开箱与网络接入
+Type-C 有线直连与 1.6 板载 WiFi 直连两套方案、静态 IP 避坑、SSH 免密秒连与 Host Key 排错。
+操作步骤故障排查约 12 分钟
+开始学习 →
+Lesson 03
+Hello World：/vel_cmd 20Hz 运控
+官方唯一底盘速度接口、500ms 看门狗原理，以及带 --confirm-motion 安全授权与急停兜底的完整脚本。
+代码实战运动安全约 15 分钟
+开始学习 →
+学习路径建议
+你的目标推荐路线
+第一次接触 VBOT EDULesson 01 → 02 → 03，顺序学完约 35 分钟
+只想尽快让狗动起来直接跳到 Lesson 02（网络）→ Lesson 03（Hello World）
+用 Cursor / Claude Code 等 AI Agent 开发把本教程页面直接喂给 Agent，配合 vbot-docs/AGENTS.md 路由规约使用
+开始之前
+机器狗已充能，开发机准备双头 Type-C 数据线或 Type-C 转 RJ45 网线
+准备一块至少 2m × 2m 的平整开阔场地，运动测试时必须有人在旁监护
+记住具身开发第一准则：软件急停永远不能替代物理急停开关
+⚠️ 接口版本警示
+本教程以固件 V1.6.0 为准。网络流传的 /vbot/sportmode_cmd 话题已彻底废弃，官方现行底盘速度接口为 /vel_cmd（geometry_msgs/msg/Twist，Domain ID 178）。
+源文档：vbot-docs/01-getting-started/ · 风格契约 v2
+下一模块：02 架构拓扑与通信机制 →

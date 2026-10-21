@@ -1,0 +1,205 @@
+https://zhangzhenyao.com/vbot-docs/02-architecture-comm/lesson_02.html
+2.2 Aorta（Zenoh 46 话题）主干道与 ROS 2 兼容子集 | VBOT EDU 架构与通信
+VBOT EDU 架构与通信
+模块 02 · Lesson 02
+巴别塔：协议隔离根因
+46 条核心话题速查
+破壁两套方案
+Aorta 命令行万能探针
+小实验：话题穿越测试
+本课小结
+← 返回目录
+Lesson 02
+安全级别：信息型（informational）
+固件基准 V1.6.0
+Aorta（Zenoh 46 话题）主干道与 ROS 2 兼容子集
+预计阅读 12 分钟 · 前置课程：2.1 双大脑硬件架构拆解与物理边界 · 关键词：Aorta · Zenoh · rmw_zenoh_cpp · Domain 178
+🎙️ 展开直播口播导语（讲师版）
+“各位直播间的同学们，请大家打起十二分精神！本节是整套进阶体系中价值最高、最容易拯救你生命的一堂课！几乎 90% 的 ROS 老手在刚拿到这台机器狗时，都会经历长达数天的怀疑人生：‘为什么我在自己笔记本电脑上明明能 ping 通机器狗，执行 ros2 topic list 甚至能看到话题名字，但执行 ros2 topic echo /imu_raw 却像死水一潭，半天吐不出来一个字节？为什么向 /vel_cmd 投递速度包，机器狗却稳如泰山、毫无反应？’答案只有一句话：Aorta 通信总线才是整个系统的绝对主力主干道，ROS 2 在这里仅仅是一个本地兼容子集！今天我们就来彻底拆穿这个‘通信巴别塔’的秘密！”
+本课学习目标
+说清 ROS 2 DDS 与 Aorta（Zenoh）为什么互相“看不见”：协议栈不同、Domain 隔离与 ACL 静默丢弃三重叠加
+记住 46 条核心话题 = 43 条遥测输出 + 3 条控制输入，能查到常用话题的 Aorta 原生路由与 ROS 2 桥接名
+用方案 A 在板载节点跑通通信，理解共享内存路径 < 0.2 毫秒的意义
+仅在外接 GPU 工作站场景下使用方案 B（rmw_zenoh_cpp + Domain 178）
+用 aorta topic list / echo / service list / schema get 四条命令 3 秒摸清总线状况
+一、根因拆解：协议隔离的“巴别塔”
+传统 ROS 2（从 Foxy 到 Humble）默认采用基于 DDS（Data Distribution Service）的中间件，其中最普及的实现是 eProsima 的 FastRTPS，而它严重依赖局域网内频繁的 UDP 组播发现机制。
+在追求高带宽视频流传输与端侧微秒级确定性的现代化具身机器人上，VBOT 自研了 Aorta 通信框架——底层基于 Eclipse 顶级开源项目 Zenoh 协议构建。两套协议栈各跑各的，于是就有了这座“通信巴别塔”：
+ROS 2 DDS 域PC · 默认 Domain 0
+开发节点 / 调试终端
+RMW：rmw_fastrtps_cpp
+UDP 组播发现
+ros2 topic echo 持续无输出
+看得到残留话题名，收不到真实载荷
+×
+两侧不可直连
+DDS 报文无法穿透 Zenoh Session 屏障
+PC Domain 0 ≠ 主板 Domain 178
+aorta_ros2_bridge板载协议转接器
+仅 127.0.0.1 桥接
+Aorta（Zenoh）域主板 · ROS_DOMAIN_ID=178
+Aorta 原生总线 · 开放 46 条核心话题
+aorta_ros2_bridge → 本地 ROS 2 子集
+底盘 14 关节运控与传感器硬件驱动
+共享内存（POSIX Shared Memory）
+一句话总结图意：你 PC 上的 ROS 2 域和主板上的 Aorta 域，中间没有默认直通的车道。桥接器只长在主板这一侧，而且仅在本地回环上工作。
+为什么会出现“能看到话题却收不到数据”的灵异现象？
+网络层假握手偶尔看到的节点信息，往往来自此前残留的组播缓存；真实的底层数据载荷全部流淌在 Zenoh 会话内，DDS 订阅者根本无法解包。
+域隔离（Domain Isolation）板载 ROS 2 系统被硬件严格约束在 ROS_DOMAIN_ID=178；如果你的电脑运行在默认的 Domain 0，两者在物理逻辑端口上根本不在同一个次元。
+ACL 访问控制表的“静默丢弃”Aorta 内部配备了经过强类型校验的 56 行 EDU Schema 规则。任何未在白名单中声明的非法话题名或非法数据类型，在总线层面会被直接静默丢弃——既不报错，也不响应，表现就是完全没有反应。
+🚨 能 ping 通，不等于能收数据ICMP 只证明 IP 层可达，数据要走的是协议层。排障时按顺序核对三件事：协议栈（DDS 还是 Zenoh）、域号（是不是 178）、白名单（话题名与消息类型是否在 56 行 EDU Schema 内）。
+二、46 条 Aorta 核心话题全景速查
+Aorta 总线向开发者一次性开放了 46 条核心话题——包括 43 条高频遥测输出与 3 条控制输入。下表按运动控制、感知、音频与灯光、系统分组，照录官方速查表中的 9 条常用核心路径：左列是主干道上的 Aorta 原生路由，右列是板载 ROS 2 桥接后你熟悉的名字。
+46条核心话题
+43 + 3遥测输出 + 控制输入
+178强制 ROS Domain
+< 0.2 ms板载共享内存延迟
+功能模块Aorta 原生路由（主干道）ROS 2 本地桥接话题传输语义 / 频次 / 消息类型
+运动控制与遥控
+底盘速度输入
+/locomotion/velocity_command
+/vel_cmd
+唯一合法底盘速度写入，20Hz 连续输入（Twist）
+手柄遥控输入
+/locomotion/joy
+/joy
+模拟遥控器摇杆与按键状态（Joy）
+感知与视觉
+机身高频姿态
+/imu_raw
+/lowlevel/imu_raw
+100Hz 原始加速度计 / 陀螺仪 / 四元数（Imu）
+360° 激光雷达
+/lidar_points
+/vbot/lidar/point_cloud
+10Hz 三维空间深度点云（PointCloud2）
+双目视频流
+/image_left_raw/h265
+—
+H.265 硬件视频压缩编码流（需 Aorta SDK）
+17 点人体骨骼
+/perception/poses
+/perception/poses
+NPU 内置骨骼模型推理结果（Logit 置信度）
+音频与灯光（外设输入）
+耳灯调制输入
+/light/ear_modulation
+/light/ear_modulation
+左右耳 RGB 灯光动态调制输入
+系统与任务编排
+BMS 电池健康
+/bms_state
+/vbot/bms_state
+实时电量百分比、母线电压、各电芯温度
+RCP 任务编排
+/rcp/execute_task
+/rcp/execute_task
+Action 动作流服务（支持 DAG 任务图）
+← 左右滑动查看完整表格 →
+说明：官方速查表仅列出上述 9 条常用核心路径；音频等其余话题未在源文档中给出具体路由名，本课不作臆造，完整 46 条请以主板实机的 aorta topic list 输出为准。
+⚠️ 两个容易踩的坑第一，底盘速度只有 /vel_cmd（原生 /locomotion/velocity_command）这一条合法写入通道，20Hz 连续输入 Twist；第二，话题名或消息类型一旦不在 56 行白名单内，总线会静默丢弃，不会给你任何报错——看起来就像“发出去石沉大海”。
+三、破壁两套方案：板载节点 vs PC Zenoh 插件
+要让数据跨过这座巴别塔，官方给了两条路。路线一旦选错，后面所有配置和排障都是白费——先看两条数据路径的本质差异：
+★★★★★ 强烈推荐方案 A：板载节点
+你的节点（板载）SSH 登录计算主板直接运行
+↓
+POSIX 共享内存零拷贝 · 延迟 < 0.2 ms
+↓
+Aorta 总线（Zenoh）46 条核心话题
+↓
+运控 / 传感器驱动底盘 14 关节与硬件
+数据不出主板，完全摆脱 Wi-Fi 丢包困扰。
+仅外接 GPU 工作站方案 B：PC + Zenoh RMW
+你的节点（PC）如外挂 RTX 4090 移动工作站
+↓
+rmw_zenoh_cppRMW_IMPLEMENTATION
+↓
+Zenoh 会话ROS_DOMAIN_ID=178
+↓
+Aorta 总线 · 桥接话题如 /lowlevel/imu_raw
+用于订阅全量激光点云等重负载场景，日常调试不作为默认路线。
+方案 A：板载节点运行模式（强烈推荐 ★★★★★）
+一句话法则：不要在你的电脑上去费劲编译配置一整套 RMW，直接 SSH 登录到机器狗计算主板上写代码！
+零拷贝极速通信：节点间直接通过 Linux 共享内存（POSIX Shared Memory）通信，传输延迟 < 0.2 毫秒，完全摆脱 Wi-Fi 丢包困扰；
+环境完全开箱即用：主板出厂即预装了完全匹配的 aorta-sdk 与 vbot_ros2_msgs。
+板载快速启动环境配置：在计算主板终端的 ~/.bashrc 尾部，确保包含官方标准注入块：
+bash复制
+# 激活板载 ROS 2 与 Aorta 运行时
+source /opt/vita/ros/humble/setup.bash
+source /opt/vita/aorta/ros/local_setup.bash
+# 强制绑定本地回环与官方 178 域
+export ROS_DOMAIN_ID=178
+export ROS_LOCALHOST_ONLY=1
+export ZENOH_SESSION_CONFIG_URI=/opt/vita/aorta/edu/edu_session.json5
+✅ 三行 export 各司其职ROS_DOMAIN_ID=178 对齐官方域；ROS_LOCALHOST_ONLY=1 强制绑定本地回环；ZENOH_SESSION_CONFIG_URI 指向 EDU 会话配置 edu_session.json5。写进 ~/.bashrc 后记得重新登录或 source ~/.bashrc 使其生效。
+方案 B：PC 安装 Zenoh RMW 插件（仅外接 GPU 工作站）
+如果你有一台外挂的 RTX 4090 移动工作站，需要订阅全量激光点云，可以按官方三步走：
+bash复制
+# 1. 在 PC 上安装 Zenoh RMW
+sudo apt update && sudo apt install ros-humble-rmw-zenoh-cpp
+# 2. 导出环境变量
+export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+export ROS_DOMAIN_ID=178
+# 3. 此时再执行 echo 即可畅通接收数据流
+ros2 topic echo /lowlevel/imu_raw
+⚠️ 方案 B 的三个前提，缺一不可PC 上装好 ros-humble-rmw-zenoh-cpp；RMW_IMPLEMENTATION=rmw_zenoh_cpp 已导出；ROS_DOMAIN_ID=178 已对齐。源文档同时标注板载桥接器“仅在 127.0.0.1 桥接”，因此方案 B 的定位是外接 GPU 工作站的专用通道，日常开发请优先方案 A。
+怎么选：一张表定路线
+维度方案 A：板载节点方案 B：PC + Zenoh RMW
+代码运行位置计算主板（SSH 登录）你的 PC
+通信路径POSIX 共享内存 → Aorta 总线rmw_zenoh_cpp → Zenoh 会话 → Aorta 总线
+延迟< 0.2 ms源文档未给出指标
+适用场景日常开发、高频运控、现场调测外接 GPU 工作站订阅全量点云
+环境准备主板预装 aorta-sdk 与 vbot_ros2_msgs，注入环境变量即可apt 安装 ros-humble-rmw-zenoh-cpp，再导出两个环境变量
+← 左右滑动查看完整表格 →
+四、Aorta 命令行万能探针（排障杀手锏）
+在计算主板上，善用官方提供的 aorta CLI 工具，能在 3 秒内摸清总线状况：
+bash复制
+# 1. 查看总线上当前所有活跃的话题清单
+aorta topic list
+# 2. 采样 1 条 IMU 原始报文验证总线是否真的活蹦乱跳
+aorta topic echo /imu_raw --count 1
+# 3. 检查所有注册的 RPC 服务
+aorta service list
+# 4. 打印指定话题的底层数据结构契约描述
+aorta schema get /imu_raw --describe
+四条命令分别回答什么问题
+命令回答的问题典型使用时机
+aorta topic list总线上现在有哪些活跃话题？刚接手设备，确认话题是否真的起来了
+aorta topic echo /imu_raw --count 1总线是否真的在出数据？ros2 topic echo 卡住时，先验证源头是否有数据
+aorta service list注册了哪些 RPC 服务？调用 Action / RPC 之前确认服务在线
+aorta schema get /imu_raw --describe这个话题的底层结构契约是什么？写解析代码前对齐字段与类型，避免被 56 行白名单丢弃
+← 左右滑动查看完整表格 →
+💡 排障顺序不要反先跑 aorta topic echo /imu_raw --count 1 确认总线有数据，再用 ros2 topic echo 验证桥接。探针有数据、PC 收不到 → 按“桥接话题 → Domain → RMW”三层核对；探针也没数据 → 问题在总线或驱动层，先别折腾 ROS 2 环境。
+五、🧪 小实验：话题穿越测试
+下面把真实排障场景压缩成一次点击：选一条话题，再选代码运行的位置，看看数据能不能穿过协议边界抵达你的节点。判定结果会同时给出原因和关键配置。
+选择话题与运行位置，点击“测试连通”。
+① 话题（ROS 2 桥接名 · 消息类型）
+/vel_cmd · 底盘速度（Twist）
+/lowlevel/imu_raw · 机身高频姿态（Imu）
+/perception/poses · 17 点人体骨骼
+/vbot/lidar/point_cloud · 360° 激光雷达
+/vbot/bms_state · BMS 电池健康
+/image_left_raw/h265 · 双目视频流
+② 运行位置
+板载节点（SSH 登录计算主板）
+PC + Zenoh RMW 插件（rmw_zenoh_cpp）
+PC 裸 ROS 2 DDS（默认 FastRTPS）
+测试连通
+重置
+提示：改动任一选项后需重新测试；判定逻辑只依据本课源文档中的路由、桥接与 Domain 事实。
+六、本课小结
+把这一课压缩成三句话：主干道是 Aorta，不是 ROS 2；ROS 2 数据只走板载本地桥接；跨设备调试先对齐 Domain 178 与 RMW。
+你现在的处境首选做法关键动作
+日常写算法、调运控方案 A：板载节点SSH 上主板，注入 ROS_DOMAIN_ID=178 / ROS_LOCALHOST_ONLY=1 / edu_session.json5
+外接 GPU 工作站拉点云方案 B：PC Zenoh RMW安装 ros-humble-rmw-zenoh-cpp，导出 rmw_zenoh_cpp 与 Domain 178
+怀疑总线没数据aorta 探针aorta topic echo /imu_raw --count 1 先验证源头
+不知道话题结构或类型aorta schemaaorta schema get /imu_raw --describe，对照 56 行白名单
+← 左右滑动查看完整表格 →
+🏆 黄金铁律Aorta 是主动脉，ROS 2 是小支流，通信对齐 Domain 178，写代码直接上板载！PC 裸 DDS 永远 echo 不到 Aorta 数据——下次再遇到“能看到话题却收不到数据”，先回到这三句话。
+PC 默认 Domain 0 + FastRTPS，与主板 Domain 178 + Zenoh 之间没有默认直连通道
+46 条核心话题 = 43 条遥测 + 3 条控制输入；底盘唯一合法速度入口是 /vel_cmd
+排障先跑 aorta 探针确认总线活着，再查 ROS 2 桥接、Domain 与 RMW
+⏭️ 下一课预告通信主干已经摸清，接下来就该部署环境了：标准容器怎么搭？官方标准的五步部署法怎么跑通？下一课进入 2.3 规范化开发环境搭建与生产级 Python 骨架。
+← 上一课2.1 双大脑硬件架构拆解与物理边界
+目录返回目录
+下一课 →2.3 规范化开发环境搭建与生产级 Python 骨架

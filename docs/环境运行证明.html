@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>慢慢星 · 环境运行证明</title><style>*{box-sizing:border-box}body{margin:0;background:#f7f9f3;color:#294334;font-family:"Microsoft YaHei",sans-serif}.page{width:1100px;padding:45px 55px}.top{font-size:12px;color:#7a8b70;letter-spacing:2px}h1{font-size:32px;margin:15px 0}.desc{font-size:13px;color:#7a886e;line-height:1.9}.cards{display:flex;gap:15px;margin:28px 0}.card{padding:18px 22px;border:1px solid #d8e2cf;border-radius:13px;background:white;flex:1}.card b{font-size:19px}.card p{font-size:11px;color:#839077}.pass{color:#557d43}.code{border:1px solid #d6e0cd;border-radius:13px;background:#253d32;color:#e0ebd6;padding:26px;font:12px/1.8 Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.note{margin-top:20px;padding:18px 22px;border:1px solid #e5d8c4;background:#fbf4e9;font-size:12px;color:#8b7150;border-radius:12px;line-height:1.9}.foot{font-size:11px;margin-top:20px;color:#8a987d}</style><div class="page"><div class="top">MANMAN PLANET / VERIFIED LOCAL RUNTIME</div><h1>开发环境与 ROS 2 仿真运行证明</h1><div class="desc">2026年10月22日 · 真实环境检查与集成测试结果汇总<br>以下是原始 JSON 的可视化排版，不是终端原始截图。复现方法见 README。</div><div class="cards"><div class="card"><b>Ubuntu 22.04 / WSL2</b><p>ROS 2 Humble · Python 3.10.12</p></div><div class="card"><b class="pass">PASS / turtlesim</b><p>实际速度消息与姿态变化均已观察</p></div><div class="card"><b class="pass">PASS / 停止路径</b><p>休息、租约到期、服务中断后归零</p></div></div><pre class="code">{
+  &quot;environment&quot;: {
+    &quot;checked_at&quot;: &quot;2026-10-21T18:42:03.616837+00:00&quot;,
+    &quot;platform&quot;: &quot;Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.35&quot;,
+    &quot;python&quot;: &quot;3.10.12&quot;,
+    &quot;ros_distro&quot;: &quot;humble&quot;,
+    &quot;ros_domain_id&quot;: &quot;0 (default)&quot;,
+    &quot;ros2_on_path&quot;: &quot;/opt/ros/humble/bin/ros2&quot;,
+    &quot;rclpy_importable&quot;: true,
+    &quot;display&quot;: &quot;:0&quot;,
+    &quot;vbot_board_runtime&quot;: false,
+    &quot;vbot_sdk_ready&quot;: &quot;UNVERIFIED&quot;,
+    &quot;robot_permission&quot;: &quot;UNVERIFIED&quot;,
+    &quot;real_robot_test&quot;: &quot;NOT_RUN&quot;,
+    &quot;turtlesim_package&quot;: &quot;/opt/ros/humble&quot;
+  },
+  &quot;ros_integration&quot;: {
+    &quot;result&quot;: &quot;PASS&quot;,
+    &quot;domain&quot;: 63,
+    &quot;simulation&quot;: &quot;actual ROS 2 Humble turtlesim&quot;,
+    &quot;observed_twist_messages&quot;: 98,
+    &quot;observed_pose_messages&quot;: 303,
+    &quot;rotation_radians&quot;: 0.0768,
+    &quot;pause_to_zero_ms&quot;: 50.1,
+    &quot;network_outage_zero&quot;: &quot;PASS&quot;,
+    &quot;automatic_expiry_zero&quot;: &quot;PASS&quot;,
+    &quot;real_robot_test&quot;: &quot;NOT_RUN&quot;
+  }
+}</pre><div class="note"><b>范围声明：</b>这是 Windows/WSL 本地开发环境与 turtlesim 仿真证明。VBOT SDK、开发权、板载运行与真机动作尚未验证；不得作为真机部署或临床效果证明。约50ms是本机单次观察结果，不是时延保证。</div><div class="foot">原始文件：evidence/wsl-environment.json + evidence/ros-integration.json<br>校验入口：python3 scripts/check_environment.py / python3 scripts/verify_ros.py</div></div></html>

@@ -1,0 +1,16 @@
+{
+  "result": "PASS",
+  "flows": 4,
+  "checks": [
+    "adult consent gate",
+    "all activities",
+    "skip accepted",
+    "pause persists on reload",
+    "adult resume",
+    "report export",
+    "memory delete",
+    "mobile no overflow",
+    "no JS runtime errors"
+  ],
+  "js_errors": []
+}

@@ -1,0 +1,12 @@
+{
+  "result": "PASS",
+  "domain": 63,
+  "simulation": "actual ROS 2 Humble turtlesim",
+  "observed_twist_messages": 98,
+  "observed_pose_messages": 303,
+  "rotation_radians": 0.0768,
+  "pause_to_zero_ms": 50.1,
+  "network_outage_zero": "PASS",
+  "automatic_expiry_zero": "PASS",
+  "real_robot_test": "NOT_RUN"
+}

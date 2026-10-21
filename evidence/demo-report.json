@@ -1,0 +1,96 @@
+{
+  "product": "慢慢星 · 陪伴活动记录",
+  "notice": "仅记录本次活动选择，不是诊断、疗效或能力评分。由成人结合真实情境共同回顾。",
+  "completed_activities": 4,
+  "choices": [
+    {
+      "activity": "feelings",
+      "step": 0,
+      "kind": "answer",
+      "answer": "多云 · 不确定",
+      "elapsed_s": 0.2
+    },
+    {
+      "activity": "feelings",
+      "step": 1,
+      "kind": "answer",
+      "answer": "请大人陪我",
+      "elapsed_s": 0.2
+    },
+    {
+      "activity": "feelings",
+      "step": 2,
+      "kind": "answer",
+      "answer": "我想试试",
+      "elapsed_s": 0.3
+    },
+    {
+      "activity": "breathing",
+      "step": 0,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 0.5
+    },
+    {
+      "activity": "breathing",
+      "step": 1,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 0.6
+    },
+    {
+      "activity": "breathing",
+      "step": 2,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 0.6
+    },
+    {
+      "activity": "turns",
+      "step": 0,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 0.8
+    },
+    {
+      "activity": "turns",
+      "step": 1,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 0.8
+    },
+    {
+      "activity": "turns",
+      "step": 2,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 0.9
+    },
+    {
+      "activity": "help",
+      "step": 0,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 1
+    },
+    {
+      "activity": "help",
+      "step": 1,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 1.1
+    },
+    {
+      "activity": "help",
+      "step": 2,
+      "kind": "skip",
+      "answer": "跳过",
+      "elapsed_s": 1.1
+    }
+  ],
+  "reflection": [
+    "孩子主动表达了哪些需要？",
+    "哪些环境或支持让孩子更舒服？",
+    "孩子是否愿意在生活中再试一次？"
+  ]
+}

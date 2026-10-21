@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-21T18:42:03.616837+00:00",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "python": "3.10.12",
+  "ros_distro": "humble",
+  "ros_domain_id": "0 (default)",
+  "ros2_on_path": "/opt/ros/humble/bin/ros2",
+  "rclpy_importable": true,
+  "display": ":0",
+  "vbot_board_runtime": false,
+  "vbot_sdk_ready": "UNVERIFIED",
+  "robot_permission": "UNVERIFIED",
+  "real_robot_test": "NOT_RUN",
+  "turtlesim_package": "/opt/ros/humble"
+}

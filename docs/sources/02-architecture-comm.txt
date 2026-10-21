@@ -1,0 +1,31 @@
+https://zhangzhenyao.com/vbot-docs/02-architecture-comm/index.html
+架构拓扑与通信机制 · VBOT EDU 网页版教程
+VBOT EDU · 网页版教程 · 02
+架构拓扑与通信机制
+从双脑硬件边界到 Aorta(Zenoh) 与 ROS 2 的桥接，再到生产级开发环境：理解这台机器狗为什么这样设计、代码该跑在哪、数据如何在两套协议间流动。
+3 课 · 约 36 分钟固件基准 V1.6.0Aorta(Zenoh) + ROS 2 Humble
+课程目录
+Lesson 01
+双大脑硬件架构拆解与物理边界
+计算主板与网关板的职责边界、Linux 找不到 wlan0 的真相、14 关节动力学矩阵。
+概念讲解约 10 分钟
+开始学习 →
+Lesson 02
+Aorta（Zenoh 46 话题）主干道与 ROS 2 兼容子集
+协议隔离根因、46 条话题速查、两套破壁方案与 Aorta 命令行探针。
+概念讲解故障排查约 12 分钟
+开始学习 →
+Lesson 03
+规范化开发环境搭建与生产级 Python 骨架
+DevContainer + Bazel、五步端到端部署工作流、生产级代码骨架四大原则。
+操作步骤约 14 分钟
+开始学习 →
+本模块要点
+计算主板与网关板职责不可混淆：WiFi/蓝牙由网关板 RTOS 托管，Linux 里没有 wlan0
+PC 裸 ROS 2 DDS 与板载 Aorta 是两套协议域，跨域开发优先板载节点模式
+生产级骨架四原则：默认离线安全、有界一切、版本钉死、优雅停机
+⚠️ 中间件提示
+在 PC 上直接运行 ROS 2 节点通常看不到 Aorta 数据；请先确认协议域与 RMW，再怀疑节点代码。
+← 上一模块：01 快速开始
+源文档：vbot-docs/02-architecture-comm/ · 风格契约 v2
+下一模块：03 具身智能体开发 →

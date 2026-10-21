@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>慢慢星 · 每一个小小表达，都值得被听见</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<body>
+<aside class="rail">
+  <a class="brand" href="/" aria-label="慢慢星首页"><span class="brand-mark">✳</span><b>慢慢星<small>MANMAN PLANET</small></b></a>
+  <div class="rail-label">一起探索</div>
+  <button class="nav active" data-view="home"><span>◈</span> 陪伴小屋</button>
+  <button class="nav" data-view="review"><span>▤</span> 共同回顾</button>
+  <button class="nav" data-view="adult"><span>⚙</span> 成人设置</button>
+  <div class="rail-bottom"><div class="mini-planet">✦</div><b>不用着急，我们慢慢来。</b><p>每一次选择，都可以被尊重。</p><div class="version">辅助交互原型 · v0.1</div></div>
+</aside>
+<div class="workspace">
+<header><div><span class="breadcrumb">陪伴小屋</span><span class="header-note">一个安全表达的小空间</span></div><div class="status"><i></i><span id="connection">离线交互原型</span></div></header>
+<main id="main">
+<section id="home-view">
+  <div class="page-title"><div><div class="eyebrow">HELLO, LITTLE EXPLORER</div><h1>今天，按你的节奏来<span>✦</span></h1><p>和慢慢一起，把感受变成可以被听见的小小表达。</p></div><div class="day-chip">陪伴时光 <b>3–5 分钟 / 活动</b></div></div>
+  <div class="hero">
+    <div class="hero-copy"><div class="pill">抱一颗星星，慢慢说给我听</div><h2>每一种心情，<br>都能在这里停一停。</h2><p id="hero-message">可以说一说，点一点，也可以只是安静地坐一会。</p><button class="primary" id="begin">一起开始 <span>↗</span></button><div class="hero-foot"><span>✓ 可以跳过</span><span>✓ 随时休息</span><span>✓ 没有对错</span></div></div>
+    <div class="dog-scene" aria-label="慢慢星绘本IP形象"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="spark s1">✦</div><div class="spark s2">✧</div><div class="spark s3">·</div><div class="float-label">你好，我是慢慢。</div>
+      <img class="ip-character" src="/assets/star.webp" alt="慢慢：金黄色双辫、绿衣服，双手捧着星星的绘本伙伴">
+      <div class="robot-label"><i></i> 慢慢 · 你的星光伙伴</div>
+    </div>
+  </div>
+  <div class="section-heading"><div><h2>选一段今天的小冒险</h2><p>从感受出发，一次只练习一件小事。</p></div><span>4 个陪伴活动</span></div>
+  <div class="activities">
+    <button class="activity peach" data-activity="feelings"><div class="card-top"><span class="activity-icon">☀</span><span class="time">约 3 分钟</span></div><div class="category">01 / 表达感受</div><h3>心情气象站 <span>↗</span></h3><p>给今天的心情，选一种天气。</p><div class="card-foot">感受觉察 <span>不必解释原因</span></div></button>
+    <button class="activity lilac" data-activity="breathing"><div class="card-top"><span class="activity-icon">☁</span><span class="time">约 3 分钟</span></div><div class="category">02 / 调节情绪</div><h3>云朵充电站 <span>↗</span></h3><p>和云朵一起，找回舒服的节奏。</p><div class="card-foot">身体与情绪 <span>随时可以停下</span></div></button>
+    <button class="activity blue" data-activity="turns"><div class="card-top"><span class="activity-icon">✧</span><span class="time">约 4 分钟</span></div><div class="category">03 / 社交沟通</div><h3>轮流小星球 <span>↗</span></h3><p>你一颗，我一颗，把星光传递。</p><div class="card-foot">轮流与请求 <span>图卡也能参与</span></div></button>
+    <button class="activity mint" data-activity="help"><div class="card-top"><span class="activity-icon">⌒</span><span class="time">约 5 分钟</span></div><div class="category">04 / 情境练习</div><h3>勇气小桥 <span>↗</span></h3><p>练习换个角度，表达自己的需要。</p><div class="card-foot">想法与行动 <span>成人共同支持</span></div></button>
+  </div>
+  <div class="bottom-strip"><span class="leaf">♧</span><div><b>陪伴，从尊重孩子的选择开始。</b><p>不要求眼神接触，不把安静或重复动作当作错误。陪伴成人全程在场。</p></div><button class="text-button" data-view="adult">了解活动说明 ↗</button></div>
+</section>
+<section id="play-view" hidden><button class="text-button" id="back">← 回到陪伴小屋（结束本次活动）</button><div class="play-heading"><span id="play-tag">陪伴活动</span><h1 id="play-title"></h1><div id="progress" class="progress"></div></div><div class="play-card"><div id="play-illustration" class="play-illustration">☀</div><p class="step-label" id="step-label"></p><h2 id="prompt" tabindex="-1"></h2><div id="choices" class="choices"></div><div class="play-actions"><button id="skip" class="text-button">跳过这一步 →</button><span>可以用图卡、手势或成人协助</span></div></div><div id="complete" hidden class="complete"><div class="big-star"><img src="/assets/welcome.webp" alt="慢慢轻轻挥手"></div><h2>谢谢你和我一起尝试。</h2><p>无论说出来、点一点，还是选择跳过，都值得被尊重。</p><p>和陪伴的大人聊聊：生活中什么时候也想这样表达？</p><button class="primary" id="home-after">回到陪伴小屋</button></div></section>
+<section id="review-view" hidden><div class="eyebrow">GROW TOGETHER</div><h1>一起回顾，不给孩子打分。</h1><p class="muted">本次活动仅保存在运行内存中。记录不是诊断、疗效或能力评估。</p><div class="review-grid"><div class="panel"><h2>今天的小小尝试</h2><p id="review-summary">还没有活动记录。</p><div id="review-events"></div></div><div class="panel"><h2>留给成人的三个问题</h2><p>01　孩子主动表达了哪些需要？</p><p>02　哪些环境或支持让孩子更舒服？</p><p>03　孩子是否愿意在生活中再试一次？</p><button id="export" class="primary">导出本次记录 JSON ↓</button><p class="muted">导出文件请由监护人妥善保管。</p><button id="delete" class="text-button danger">清除本次全部记录</button></div></div></section>
+<section id="adult-view" hidden><div class="eyebrow">CAREGIVER SPACE</div><h1>先准备一个舒服的小空间。</h1><div class="review-grid"><div class="panel"><h2>感官偏好</h2><label class="setting"><input id="quiet" type="checkbox" checked> 安静模式 <small>默认无音效；活动文字可由成人轻声朗读。</small></label><label class="setting"><input id="reduced" type="checkbox" checked> 减少动态效果 <small>默认关闭云朵呼吸动画，文字仍可提示节奏。</small></label><button class="primary" id="save-settings">保存偏好</button><h2>设备状态</h2><p id="device-detail">浏览器展示为交互示意，尚未连接真机。</p><p class="muted">仿真适配器需在 WSL 的 ROS 2 环境单独启动。网页不提供真机运动开关。</p></div><div class="panel"><h2>活动使用边界</h2><p>本原型借鉴 CBT 的感受觉察、替代性解释与行为练习原则，用于有成人支持的游戏化辅助交互。</p><p>不诊断孤独症，不替代专业评估或干预，不声称已验证疗效。面向约 6–10 岁、能够在成人协助下选择图卡的儿童开展共同设计，具体适配应咨询熟悉孩子的专业人员。</p><p>孩子可以不说、跳过或结束；无需眼神接触。出现不适时，立即休息并由成人支持。</p><p>默认不采集摄像头、麦克风、姓名、年龄或身份信息，也不向云服务上传内容。此版本不接入大模型。</p><p>真机首次联调由成人在隔离区域完成，须遵守现场设备要求；软件停止不能替代物理急停。</p></div></div></section>
+<section id="rest-view" hidden class="rest"><div class="rest-cloud"><img src="/assets/needs.webp" alt="慢慢举起休息卡片"></div><div class="eyebrow">TAKE YOUR TIME</div><h1>我们先休息一下。</h1><p>可以安静待着，也可以请大人陪伴。<br>你不需要现在就继续。</p><button class="primary" id="resume">我是陪伴成人，确认重新选择活动</button><p class="muted">恢复后回到活动选择，不自动继续动作。</p></section>
+</main><footer><span>慢慢星 · CBT 原则启发的游戏化陪伴设计</span><span>本地运行 / 不采集音视频 / 成人共同参与</span></footer>
+</div>
+<button class="rest-button" id="stop"><span>Ⅱ</span> 我想休息</button>
+<dialog id="consent-dialog"><div class="eyebrow">BEFORE WE START</div><h2>请陪伴成人确认</h2><p>这是辅助交互原型，不是诊断或治疗工具。请全程在场，尊重孩子的暂停和拒绝。</p><label><input type="checkbox" id="adult-present"> 我是陪伴成人，本次全程在场。</label><label><input type="checkbox" id="consent"> 我理解活动边界，同意本次匿名选择暂存于本地内存；可随时清除。</label><div class="dialog-actions"><button class="text-button" id="cancel-consent">暂不开始</button><button class="primary" id="confirm-consent">确认，进入小屋</button></div><p id="consent-error" class="danger" role="alert"></p></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>

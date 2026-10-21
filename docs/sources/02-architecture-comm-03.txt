@@ -1,0 +1,208 @@
+https://zhangzhenyao.com/vbot-docs/02-architecture-comm/lesson_03.html
+2.3 规范化开发环境搭建与生产级 Python 骨架 | VBOT EDU 架构与通信
+VBOT EDU 架构与通信
+模块 02 · Lesson 03
+DevContainer 与 Bazel
+端到端五步部署
+生产级骨架四大原则
+极简标准工程模板
+小实验：安全边界检查器
+本课小结
+← 返回目录
+Lesson 03
+安全级别：只读（read_only）
+固件基准 V1.6.0
+规范化开发环境搭建与生产级 Python 骨架
+预计阅读 14 分钟 · 前置课程：2.2 Aorta 主干道与 ROS 2 兼容子集 · 工具准备：Docker、VS Code Dev Containers、SSH 客户端
+🎙️ 展开直播口播导语（讲师版）
+“很多初学者的代码往往‘在自己电脑上跑得好好的，一到机器人实机上就发疯死锁、内存暴涨或引发看门狗摔机’。还有人一拿到机器狗，脑袋一热就直接在实机上改生产配置，结果系统直接崩溃变砖！本章将带你了解官方推荐的 DevContainer 容器化开发工具链，掌握贯穿实战的‘端到端五步部署法’，并深入解析 vbot-lab 中被誉为工程典范的 recipes/common.py 生产级防御性代码骨架！”
+本课学习目标
+用 DevContainer 与 Bazel 在本地完成离线构建与类型校验，避开主机 GCC 差异和 aarch64 交叉编译地狱
+按官方五步部署法从 check_environment 走到实机物理响应，每一步都有验收标准
+说清 recipes/common.py 的四大防御原则：默认离线安全、有界一切、版本硬性钉死、优雅停机归零
+用极简工程模板搭出自己的二开项目，让关键文件各司其职
+在安全边界检查器里找出超限参数，理解 vx、持续时间与发布频率的约束
+📌 本课安全边界本课以只读方式学习：容器构建、Bazel 编译与参数检查都不会向机器狗下发运动报文。五步部署中的实机执行只做讲解，不要求在本课完成。
+上一课我们把 Aorta 的 46 个话题与 ROS 2 桥接理清了：知道消息往哪里发。但“能发消息”不等于“能安全上线”。同一段 Python 代码，在笔记本上跑得好好的，换一台主机就可能因为 GCC 版本、aarch64 交叉编译或依赖错位而崩掉；更危险的是，一次没有边界的实机调试就可能触发看门狗甚至摔机。
+这一课解决三个问题：环境怎么统一、代码怎么部署、骨架怎么防御。
+一、DevContainer + Bazel：把开发环境装进容器
+为了杜绝因主机系统差异导致的 GCC 版本不匹配与 aarch64 交叉编译地狱，官方提供了标准开发容器。它把 Ubuntu 22.04、Bazel 7.6.1 与整套构建依赖固化在镜像里，开发者电脑只负责编辑代码。代码从哪里进入容器、产物从哪里出去，先看下面这张链路图：
+1. 开发链路：宿主机 → 容器 → 机器狗
+宿主机
+开发者电脑
+x86_64 / macOS
+VS Code + Dev Containers
+源码工作区
+代码挂载⇄bind mount
+开发容器
+Ubuntu 22.04 容器
+Bazel 7.6.1：离线构建与校验
+产物：编译产物 / Python Wheelhouse
+不依赖宿主机 GCC
+部署出口⇢SCP
+目标实机
+机器狗计算主板
+aarch64 运行环境
+/userdata/vbot/apps/
+实机安全执行
+图 1：代码只在一处编辑，构建在容器内完成，产物经 SCP 从部署出口推送到实机
+2. 容器一键启动
+在 VS Code 中安装 Dev Containers 插件，打开工作区后选择 “Reopen in Container”；也可以直接在命令行执行：
+bash复制
+docker compose -f docker/compose.yaml run --rm dev
+💡 为什么不再手工配环境容器已经把 Ubuntu 22.04 + Bazel 7.6.1 固定下来。不要在宿主机上手工拼一套 GCC 再祈祷它能和实机一致——环境差异正是“本地能跑、实机发疯”的第一大来源。
+3. Bazel 离线语法检查与构建
+官方项目全面采用 Google Bazel 构建系统。下面两条命令覆盖了本课最常见的离线验证场景：
+bash复制
+# 本地快速类型检查与离线逻辑预览（无需物理连接机器狗）
+bazel run //recipes/subscribe-state:main
+# 编译 C++ 生产级节点
+bazel build //recipes/locomotion:main_cpp
+第一条命令运行状态订阅配方，做本地快速类型检查与离线逻辑预览，不需要物理连接机器狗；第二条命令编译 C++ 生产级节点，验证整条构建链路。这两步都发生在容器内，失败也不会碰到实机。
+4. 环境基线速查
+层级基线说明
+宿主机x86_64 / macOS只负责编辑代码，通过 VS Code + Dev Containers 接入
+开发容器Ubuntu 22.04 + Bazel 7.6.1提供一致的构建与类型校验环境
+目标主板aarch64 计算主板部署目录 /userdata/vbot/apps/
+构建产物编译产物 / Python Wheelhouse经 SCP 推送至实机
+二、官方端到端五步部署工作流
+千万别一上来就盲目把代码塞进机器狗。官方把从本地到实机的路径拆成五步：前一步没验收，不要跳下一步。五步走完，你拿到的不是“看起来能跑”，而是“每一步都可解释、可回退”。
+1. 五步流程图
+1
+第一步：check_environment本地离线依赖与只读自检
+2
+第二步：Docker 容器与 SSH拉取官方镜像，建立 BatchMode 免密通道
+3
+第三步：Python SDK 沙箱在板载环境创建独立 venv，离线安装校验
+4
+第四步：Bazel 编译配方构建首个状态订阅配方，体验默认离线预览
+5
+第五步：SCP 推送与物理响应部署至 /userdata/vbot/apps/，实机安全执行
+图 2：从本地自检到物理响应，五步顺序固定；越靠后，越接近不可回退的物理世界
+2. 逐步验收要点
+Step 1：check_environment 离线自检在本地运行 python3 tools/check_environment.py --profile host，确认本地 Python ≥ 3.10、Docker 与 SSH 客户端完备。
+Step 2：建立安全通道通过 ssh-copy-id 注入 ed25519 公钥，再通过 ssh -o BatchMode=yes vbot true 验证免密畅通。
+Step 3：端侧环境隔离登录主板后在 /userdata/vbot/ 下创建独立 venv，验证 SHA256 校验和并安装 edu-sdk-2026.9.24 三件套。
+Step 4：离线预览守卫使用 Bazel 编译测试配方。在未带 --execute 标志前，程序仅向终端打印 JSON 预览，杜绝误操作。
+Step 5：物理响应验证使用 SCP 推送程序包，登录实机加上 --execute 与 --confirm-motion，见证物理四足的真实响应！
+🚨 唯一的物理边界--execute 是“离线预览”与“实机写入”的分水岭；运动控制还必须显式传 --confirm-motion；麦克风录音与摄像头采流必须显式传 --consent。少一个标志，要么被程序拒绝，要么根本不该动。
+🔑 BatchMode 失败不要硬闯BatchMode=yes 的含义是禁止交互式密码提示。它验证失败，说明公钥没有真正注入或权限不对；不要靠反复输密码掩盖问题，先回头检查 ~/.ssh 与 authorized_keys。
+三、深度解构 recipes/common.py：四大防御原则
+在 vbot-lab 中，所有任务脚本都严格继承自 recipes/common.py。这 140 多行代码凝结了工业级机器人开发的防御性设计。对二次开发者来说，最重要的不是背代码，而是理解四个原则为什么存在——它们分别对应实机上最昂贵的一类事故。
+01默认离线安全
+凡是不带 --execute 的运行命令，程序绝不向底层下发任何物理位移报文，仅向终端打印 JSON 格式的目标动作预览。
+运动控制必须显式传递 --confirm-motion。
+麦克风录音与摄像头采流必须显式传递 --consent。
+02有界一切
+超时有界：所有网络接收超时强制约束在 (0, 120] 秒内，杜绝无超时等待导致的永久挂死。
+队列深度截断：Aorta 消息接收队列深度严格限定为 16，消费不及时就主动丢弃最旧样本并向 stderr 抛出警告。
+单样本体积上限：单个点云或图像数据包上限截断为 8 MiB。
+03版本硬性钉死
+脚本启动前，必须通过 importlib.metadata 校验 SDK 三件套：aorta、aorta-msgs、vbot-edu-msgs。
+版本号不一致立刻阻断，不给“先跑起来再说”的机会。
+目标只有一个：杜绝因协议版本错位引发不可预测动作。
+04优雅停机与安全归零
+捕获系统的 SIGINT（Ctrl+C）与 SIGTERM 信号。
+在进程退出的微秒级时间窗口内，向底盘注入全零速度急停报文。
+让“停下来”成为默认结局，而不是依赖操作者的反应速度。
+硬约束速查表
+防线硬约束拦截的风险
+网络接收超时强制落在 (0, 120] 秒无超时等待导致线程永久挂死
+Aorta 接收队列深度固定 16，消费不及时丢弃最旧样本并警告队列无限堆积，内存 OOM 撑爆主板
+单样本体积点云 / 图像单包上限 8 MiB超大包拖垮实时线程与内存
+SDK 版本aorta、aorta-msgs、vbot-edu-msgs 与 edu-sdk-2026.9.24 对齐协议版本错位引发不可预测动作
+退出信号捕获 SIGINT / SIGTERM，退出窗口注入全零速度退出瞬间缺少急停兜底
+⚠️ 这些数字不是风格偏好机器狗的板载内存与实时线程极其宝贵。任何“先收着、以后处理”的无限扩张数据结构，最终都会以 OOM 或看门狗超时的形式出现在实机上——而那时机器狗已经在动了。
+四、极简标准工程模板
+开发自己的 Python 二开项目时，推荐遵循以下结构。目录只保留必要层级：容器编排、离线自检、配方骨架与你的任务入口；业务代码永远只写业务，安全守卫交给骨架。
+tree复制
+vbot-lab/
+├── docker/
+│   └── compose.yaml            # 一键启动开发容器
+├── tools/
+│   └── check_environment.py    # Step 1 本地离线自检
+├── recipes/
+│   ├── common.py               # 生产级防御骨架（所有任务继承）
+│   ├── subscribe-state/        # //recipes/subscribe-state:main
+│   └── locomotion/             # //recipes/locomotion:main_cpp
+└── my_task.py                  # 你的二开任务入口（套用下方模板）
+关键文件职责表
+路径职责对应本课
+docker/compose.yaml开发容器编排，一条命令拉起 dev 服务容器一键启动
+tools/check_environment.py本地 Python、Docker、SSH 依赖自检五步 Step 1
+recipes/common.py离线守卫、有界约束、版本校验、信号急停四大防御原则
+recipes/subscribe-state/首个状态订阅配方bazel run 离线预览
+recipes/locomotion/C++ 生产级节点bazel build 编译
+my_task.py只写业务逻辑的任务入口下方最小模板
+1. 最小任务节点模板
+下面这份模板把三道闸门写进了最小可运行结构：超时范围校验、离线预览守卫、异常与资源兜底。代码照录自源文档，可直接作为二开起点：
+python复制
+import argparse
+import sys
+import time
+def parse_args():
+parser = argparse.ArgumentParser(description="VBOT 生产级任务节点")
+parser.add_argument("--execute", action="store_true", help="允许向机器人实机写入指令")
+parser.add_argument("--timeout", type=float, default=10.0, help="任务有界超时时间(1-120秒)")
+parser.add_argument("--confirm-motion", action="store_true", help="运动授权确认")
+return parser.parse_args()
+def main():
+args = parse_args()
+# 1. 强制超时范围校验
+if not (0 < args.timeout <= 120):
+print(f"❌ 错误: 超时时间 {args.timeout}s 超出有效安全区间 (0, 120]！", file=sys.stderr)
+sys.exit(1)
+# 2. 离线预览守卫
+if not args.execute:
+print("ℹ️ [离线预览模式] 当前未传入 --execute，仅输出仿真参数：")
+print(f"{{ 'target_timeout': {args.timeout}, 'motion_confirmed': {args.confirm_motion} }}")
+sys.exit(0)
+# 3. 核心业务逻辑（带异常兜底）
+print("🚀 [实机执行] 正在启动机器人控制任务...")
+try:
+# TODO: 执行具身智能逻辑
+time.sleep(1)
+except KeyboardInterrupt:
+print("\n⚠️ 任务被外部中断，正在恢复待命状态...", file=sys.stderr)
+finally:
+print("✅ 资源安全释放，退出。")
+if __name__ == '__main__':
+main()
+2. 模板里的三道闸门
+超时闸门if not (0 < args.timeout <= 120) 把超时锁进 (0, 120] 秒；越界直接写 stderr 并以非零码退出，连预览都不给。
+离线闸门if not args.execute 时只打印目标动作的 JSON 预览并 sys.exit(0)，绝不触碰物理底盘。
+退出闸门用 except KeyboardInterrupt 接住 Ctrl+C，用 finally 兜住资源释放，保证中断路径也能干净收场。
+🧱 这是“最小骨架”，不是完整生产骨架模板用于讲清三道闸门的结构。真正上机请继承 recipes/common.py，让 SDK 版本校验、队列截断、信号急停与 --confirm-motion / --consent 全部生效。
+五、🧪 小实验：安全边界检查器
+把一段运动指令压缩成三个数字：走多快（vx）、走多久（duration）、以多高的频率持续发包（rate）。下面的检查器会按生产骨架的三道边界即时判定，拖动滑块就能看到哪一条先越界。
+1. 拖动参数，观察即时判定
+🧪 小实验：安全边界检查器
+判定口径：vx ≤ 0.5 m/s（官方行走配方建议 0.1–0.5）、duration ≤ 10 s、发布频率 ≥ 10 Hz（看门狗 0.5 s 收不到新指令即自动悬停）。阈值仅用于教学自查，真机以官方最新文档与现场物理急停为准。
+线速度 vx0.20 m/s
+范围 0 – 1.0 m/s · 安全上限 0.5 m/s
+持续时间 duration2.0 s
+范围 0.5 – 30 s · 单次动作上限 10 s
+发布频率 rate20 Hz
+范围 1 – 30 Hz · 低于 10 Hz 有看门狗风险
+检查拖动滑块会即时重算，也可以点按钮复算
+json · 离线预览复制
+2. 三条边界分别在防什么
+参数本实验边界越界后的工程含义
+线速度 vx≤ 0.5 m/s已超出官方行走配方建议范围，实机风险随速度上升，制动与人为接管都更困难
+持续时间 duration≤ 10 s单次动作过长，异常时留给操作者与看门狗的反应窗口更小；应拆分动作并保留有界超时
+发布频率 rate≥ 10 Hz底层看门狗 0.5 s 收不到新指令就自动悬停，低频发包会让动作走走停停甚至触发保护
+💡 这个检查器不替代实机演练它只覆盖三个最容易被忽视的参数。真机测试前，仍要把物理急停放在手边、在开阔场地进行，并逐项确认 --execute 与 --confirm-motion 的授权边界。
+六、本课小结
+主题一句话记住
+DevContainer + Bazel宿主机只编辑，容器内用 Ubuntu 22.04 + Bazel 7.6.1 完成离线构建与类型校验
+五步部署check_environment → Docker/SSH → SDK 沙箱 → Bazel 配方 → SCP 推送与物理响应
+recipes/common.py默认离线安全、有界一切、版本硬性钉死、优雅停机归零
+工程模板目录分层 + 三道闸门，业务代码只写业务
+环境差异交给容器，构建验证交给 Bazel，不再手工拼宿主机工具链
+没带 --execute 只配看 JSON 预览；运动控制还要 --confirm-motion
+超时 (0, 120]、队列深度 16、单包 8 MiB、SDK 三件套版本必须对齐
+上机前用安全边界检查器过一遍 vx、duration 与发布频率
+⏭️ 下一模块预告环境与部署链路打通后，我们进入 03 运控、感知与多模态 Agent。第一课从状态订阅走向运动控制进阶与 RCP DAG 动作流编排：运动控制进阶与 RCP DAG 动作流编排。
+← 上一课2.2 Aorta（Zenoh 46 话题）主干道与 ROS 2 兼容子集
+目录返回目录
+下一课 →03 运动控制进阶与 RCP DAG 动作流编排
